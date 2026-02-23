@@ -1,0 +1,1462 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Record News</title>
+
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#1A6FE8" />
+  <meta name="description" content="O canal de notícias 24h do Brasil. Fique por dentro de tudo." />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="/icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Record News" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Record News" />
+  <meta property="og:description" content="O canal de notícias 24h do Brasil." />
+  <meta property="og:image" content="/icon.png" />
+
+  <style>
+    /* ===== RESET & BASE ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --rn-blue: #1A6FE8;
+      --rn-blue-dark: #0D4FAF;
+      --rn-blue-light: #3B8AF5;
+      --rn-bg: #0A1628;
+      --rn-bg2: #0F1E38;
+      --rn-card: #132040;
+      --rn-card2: #1A2B4A;
+      --rn-text: #FFFFFF;
+      --rn-text2: #A8BDD6;
+      --rn-text3: #6B8AAF;
+      --rn-border: #1E3055;
+      --rn-green: #00C853;
+      --rn-red: #FF3B30;
+      --rn-gold: #FFB800;
+      --rn-arena: #00A651;
+      --safe-top: env(safe-area-inset-top, 44px);
+      --safe-bottom: env(safe-area-inset-bottom, 20px);
+    }
+    html, body {
+      height: 100%;
+      background: var(--rn-bg);
+      color: var(--rn-text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+    }
+
+    /* ===== APP SHELL ===== */
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      max-width: 430px;
+      margin: 0 auto;
+      position: relative;
+      background: var(--rn-bg);
+    }
+
+    /* ===== HEADER ===== */
+    .header {
+      background: var(--rn-bg);
+      padding: calc(var(--safe-top) + 8px) 16px 0;
+      border-bottom: 1px solid var(--rn-border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      flex-shrink: 0;
+    }
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 12px;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      object-fit: cover;
+    }
+    .logo-text {
+      display: flex;
+      flex-direction: column;
+    }
+    .logo-text .brand {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--rn-text);
+      letter-spacing: -0.3px;
+      line-height: 1;
+    }
+    .logo-text .brand span {
+      color: var(--rn-blue);
+    }
+    .logo-text .tagline {
+      font-size: 10px;
+      color: var(--rn-text3);
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .btn-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--rn-card);
+      border: 1px solid var(--rn-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background 0.15s;
+    }
+    .btn-icon:active { background: var(--rn-card2); }
+    .live-badge {
+      background: var(--rn-red);
+      color: white;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 3px 7px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+      animation: pulse-red 2s infinite;
+    }
+    @keyframes pulse-red {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    /* ===== TABS ===== */
+    .tabs {
+      display: flex;
+      gap: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding: 0 4px;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab {
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--rn-text3);
+      cursor: pointer;
+      white-space: nowrap;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+      letter-spacing: 0.2px;
+    }
+    .tab.active {
+      color: var(--rn-blue);
+      border-bottom-color: var(--rn-blue);
+    }
+
+    /* ===== SCREENS ===== */
+    .screen {
+      display: none;
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      padding-bottom: calc(var(--safe-bottom) + 70px);
+    }
+    .screen::-webkit-scrollbar { display: none; }
+    .screen.active { display: block; }
+
+    /* ===== BOTTOM NAV ===== */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 430px;
+      background: var(--rn-bg2);
+      border-top: 1px solid var(--rn-border);
+      display: flex;
+      padding-bottom: var(--safe-bottom);
+      z-index: 200;
+    }
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 10px 4px 8px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .nav-item:active { opacity: 0.6; }
+    .nav-icon { font-size: 22px; line-height: 1; }
+    .nav-label { font-size: 10px; font-weight: 600; color: var(--rn-text3); letter-spacing: 0.3px; }
+    .nav-item.active .nav-label { color: var(--rn-blue); }
+    .nav-item.active .nav-icon { filter: none; }
+
+    /* ===== BREAKING NEWS TICKER ===== */
+    .ticker {
+      background: var(--rn-blue);
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      height: 34px;
+    }
+    .ticker-label {
+      background: var(--rn-red);
+      color: white;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 0 10px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      white-space: nowrap;
+      letter-spacing: 0.5px;
+      flex-shrink: 0;
+    }
+    .ticker-track {
+      display: flex;
+      animation: ticker 30s linear infinite;
+      white-space: nowrap;
+    }
+    .ticker-item {
+      font-size: 12px;
+      font-weight: 600;
+      color: white;
+      padding: 0 24px;
+    }
+    @keyframes ticker {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    /* ===== HERO CARD ===== */
+    .hero-card {
+      margin: 12px;
+      border-radius: 16px;
+      overflow: hidden;
+      position: relative;
+      height: 220px;
+      background: linear-gradient(135deg, var(--rn-blue-dark) 0%, var(--rn-blue) 100%);
+      cursor: pointer;
+    }
+    .hero-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.4;
+    }
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.1) 60%);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 16px;
+    }
+    .hero-category {
+      background: var(--rn-blue);
+      color: white;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 4px;
+      width: fit-content;
+      margin-bottom: 8px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .hero-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: white;
+      line-height: 1.3;
+      margin-bottom: 8px;
+    }
+    .hero-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .hero-time { font-size: 11px; color: rgba(255,255,255,0.7); }
+
+    /* ===== SECTION HEADER ===== */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 16px 10px;
+    }
+    .section-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--rn-text);
+      letter-spacing: -0.2px;
+    }
+    .section-link {
+      font-size: 12px;
+      color: var(--rn-blue);
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* ===== NEWS CARD ===== */
+    .news-list { padding: 0 12px; display: flex; flex-direction: column; gap: 10px; }
+    .news-card {
+      background: var(--rn-card);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      gap: 12px;
+      padding: 12px;
+      border: 1px solid var(--rn-border);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .news-card:active { background: var(--rn-card2); }
+    .news-thumb {
+      width: 80px;
+      height: 70px;
+      border-radius: 8px;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: var(--rn-card2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+    }
+    .news-info { flex: 1; min-width: 0; }
+    .news-cat {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--rn-blue);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    .news-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--rn-text);
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      margin-bottom: 6px;
+    }
+    .news-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .news-time { font-size: 11px; color: var(--rn-text3); }
+
+    /* ===== ARENA PLAY BANNER ===== */
+    .arena-banner {
+      margin: 16px 12px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #003D20 0%, #006B38 50%, #00A651 100%);
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(0, 166, 81, 0.4);
+    }
+    .arena-banner::before {
+      content: '⚽';
+      position: absolute;
+      right: -10px;
+      top: -10px;
+      font-size: 80px;
+      opacity: 0.15;
+      transform: rotate(15deg);
+    }
+    .arena-banner::after {
+      content: '🏆';
+      position: absolute;
+      right: 30px;
+      bottom: -5px;
+      font-size: 50px;
+      opacity: 0.2;
+    }
+    .arena-eyebrow {
+      font-size: 10px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.7);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+    .arena-title {
+      font-size: 22px;
+      font-weight: 900;
+      color: white;
+      line-height: 1.2;
+      margin-bottom: 4px;
+    }
+    .arena-title span { color: #7FE8A8; }
+    .arena-subtitle {
+      font-size: 13px;
+      color: rgba(255,255,255,0.75);
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+    .arena-stats {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .arena-stat { text-align: center; }
+    .arena-stat-value {
+      font-size: 18px;
+      font-weight: 900;
+      color: #7FE8A8;
+      line-height: 1;
+    }
+    .arena-stat-label {
+      font-size: 10px;
+      color: rgba(255,255,255,0.6);
+      font-weight: 600;
+      margin-top: 2px;
+    }
+    .btn-arena {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: white;
+      color: #006B38;
+      font-size: 15px;
+      font-weight: 800;
+      padding: 14px 20px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      width: 100%;
+      letter-spacing: 0.2px;
+      transition: transform 0.1s, opacity 0.1s;
+      text-decoration: none;
+    }
+    .btn-arena:active { transform: scale(0.97); opacity: 0.9; }
+    .btn-arena-icon { font-size: 20px; }
+
+    /* ===== LIVE TV CARD ===== */
+    .live-card {
+      margin: 12px;
+      border-radius: 16px;
+      background: var(--rn-card);
+      border: 1px solid var(--rn-border);
+      overflow: hidden;
+    }
+    .live-player {
+      background: #000;
+      height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 12px;
+      position: relative;
+    }
+    .live-player-bg {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, #0A1628 0%, #1A2B4A 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .live-logo-big {
+      width: 80px;
+      height: 80px;
+      border-radius: 16px;
+      object-fit: cover;
+      opacity: 0.9;
+    }
+    .live-play-btn {
+      position: absolute;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: rgba(26, 111, 232, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      cursor: pointer;
+      transition: transform 0.1s;
+      backdrop-filter: blur(4px);
+    }
+    .live-play-btn:active { transform: scale(0.93); }
+    .live-info {
+      padding: 14px;
+    }
+    .live-now {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--rn-red);
+      animation: pulse-dot 1.5s infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+    .live-program { font-size: 14px; font-weight: 700; color: var(--rn-text); }
+    .live-time { font-size: 12px; color: var(--rn-text3); }
+    .schedule-list { display: flex; flex-direction: column; }
+    .schedule-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-top: 1px solid var(--rn-border);
+    }
+    .schedule-time { font-size: 12px; font-weight: 700; color: var(--rn-blue); width: 44px; flex-shrink: 0; }
+    .schedule-name { font-size: 13px; color: var(--rn-text2); font-weight: 500; }
+    .schedule-item.current .schedule-name { color: var(--rn-text); font-weight: 700; }
+
+    /* ===== SPORTS SCREEN ===== */
+    .match-banner {
+      margin: 12px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--rn-bg2) 0%, var(--rn-card) 100%);
+      border: 1px solid var(--rn-border);
+      padding: 20px 16px;
+    }
+    .match-round {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--rn-blue);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 14px;
+      text-align: center;
+    }
+    .match-teams {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .match-team {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+    }
+    .team-badge {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--rn-card2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      border: 2px solid var(--rn-border);
+    }
+    .team-name { font-size: 13px; font-weight: 700; color: var(--rn-text); }
+    .match-vs {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 0 12px;
+    }
+    .match-score {
+      font-size: 28px;
+      font-weight: 900;
+      color: var(--rn-text);
+      letter-spacing: 2px;
+    }
+    .match-status {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--rn-red);
+      background: rgba(255,59,48,0.15);
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    .match-status.upcoming { color: var(--rn-text3); background: var(--rn-card2); }
+
+    /* ===== ARENA CTA FLOATING ===== */
+    .arena-cta-float {
+      margin: 0 12px 12px;
+      border-radius: 12px;
+      background: linear-gradient(90deg, #006B38, #00A651);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: transform 0.1s;
+      border: 1px solid rgba(0,166,81,0.4);
+    }
+    .arena-cta-float:active { transform: scale(0.98); }
+    .arena-cta-icon { font-size: 28px; flex-shrink: 0; }
+    .arena-cta-text { flex: 1; }
+    .arena-cta-label { font-size: 11px; color: rgba(255,255,255,0.7); font-weight: 600; }
+    .arena-cta-title { font-size: 15px; font-weight: 800; color: white; }
+    .arena-cta-arrow { font-size: 18px; color: rgba(255,255,255,0.7); }
+
+    /* ===== SPORTS NEWS ===== */
+    .sports-grid {
+      padding: 0 12px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .sport-card {
+      background: var(--rn-card);
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--rn-border);
+      cursor: pointer;
+    }
+    .sport-card-img {
+      height: 90px;
+      background: var(--rn-card2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+    }
+    .sport-card-body { padding: 10px; }
+    .sport-card-cat { font-size: 10px; font-weight: 700; color: var(--rn-blue); text-transform: uppercase; margin-bottom: 4px; }
+    .sport-card-title { font-size: 12px; font-weight: 700; color: var(--rn-text); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+    /* ===== PROFILE SCREEN ===== */
+    .profile-header {
+      background: linear-gradient(135deg, var(--rn-blue-dark) 0%, var(--rn-blue) 100%);
+      padding: 24px 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      border: 2px solid rgba(255,255,255,0.4);
+      flex-shrink: 0;
+    }
+    .profile-info { flex: 1; }
+    .profile-name { font-size: 18px; font-weight: 800; color: white; }
+    .profile-sub { font-size: 12px; color: rgba(255,255,255,0.7); margin-top: 2px; }
+    .profile-badge {
+      background: var(--rn-gold);
+      color: #000;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 4px;
+      margin-top: 6px;
+      width: fit-content;
+    }
+    .menu-section { padding: 16px 12px 8px; }
+    .menu-section-title { font-size: 11px; font-weight: 700; color: var(--rn-text3); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; padding: 0 4px; }
+    .menu-list { background: var(--rn-card); border-radius: 12px; overflow: hidden; border: 1px solid var(--rn-border); }
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--rn-border);
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .menu-item:last-child { border-bottom: none; }
+    .menu-item:active { background: var(--rn-card2); }
+    .menu-item-icon { font-size: 20px; width: 28px; text-align: center; flex-shrink: 0; }
+    .menu-item-text { flex: 1; }
+    .menu-item-title { font-size: 14px; font-weight: 600; color: var(--rn-text); }
+    .menu-item-sub { font-size: 11px; color: var(--rn-text3); margin-top: 1px; }
+    .menu-item-arrow { font-size: 14px; color: var(--rn-text3); }
+    .menu-item-badge {
+      background: var(--rn-blue);
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 10px;
+    }
+
+    /* ===== INSTALL BANNER ===== */
+    #install-banner {
+      display: none;
+      position: fixed;
+      bottom: calc(var(--safe-bottom) + 70px);
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 24px);
+      max-width: 406px;
+      background: var(--rn-blue);
+      border-radius: 14px;
+      padding: 14px 16px;
+      z-index: 300;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      display: none;
+      align-items: center;
+      gap: 12px;
+    }
+    #install-banner.show { display: flex; }
+    .install-icon { font-size: 28px; flex-shrink: 0; }
+    .install-text { flex: 1; }
+    .install-title { font-size: 13px; font-weight: 700; color: white; }
+    .install-sub { font-size: 11px; color: rgba(255,255,255,0.75); }
+    .btn-install {
+      background: white;
+      color: var(--rn-blue);
+      font-size: 12px;
+      font-weight: 800;
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-close-banner {
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.7);
+      font-size: 18px;
+      cursor: pointer;
+      padding: 2px;
+      flex-shrink: 0;
+    }
+
+    /* ===== UTILITIES ===== */
+    .divider { height: 1px; background: var(--rn-border); margin: 4px 0; }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--rn-border);
+      color: var(--rn-text3);
+      background: var(--rn-card);
+      transition: all 0.15s;
+    }
+    .chip.active { background: var(--rn-blue); color: white; border-color: var(--rn-blue); }
+    .chips-row { display: flex; gap: 8px; padding: 12px 12px 4px; overflow-x: auto; scrollbar-width: none; }
+    .chips-row::-webkit-scrollbar { display: none; }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-top">
+      <div class="logo">
+        <img src="icon.png" class="logo-icon" alt="RN" />
+        <div class="logo-text">
+          <div class="brand">RECORD <span>NEWS</span></div>
+          <div class="tagline">Notícias 24 horas</div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <span class="live-badge">● AO VIVO</span>
+        <div class="btn-icon" onclick="showSearch()">🔍</div>
+        <div class="btn-icon" onclick="showNotif()">🔔</div>
+      </div>
+    </div>
+    <div class="tabs" id="tabs">
+      <div class="tab active" onclick="switchTab('home', this)">Início</div>
+      <div class="tab" onclick="switchTab('sports', this)">Esportes</div>
+      <div class="tab" onclick="switchTab('live', this)">Ao Vivo</div>
+      <div class="tab" onclick="switchTab('politics', this)">Política</div>
+      <div class="tab" onclick="switchTab('economy', this)">Economia</div>
+      <div class="tab" onclick="switchTab('world', this)">Mundo</div>
+    </div>
+  </header>
+
+  <!-- ===== HOME SCREEN ===== -->
+  <div class="screen active" id="screen-home">
+    <!-- Breaking News Ticker -->
+    <div class="ticker">
+      <div class="ticker-label">🔴 URGENTE</div>
+      <div style="overflow:hidden; flex:1;">
+        <div class="ticker-track">
+          <span class="ticker-item">Brasileirão 2026: Rodada 1 começa hoje com 10 jogos simultâneos</span>
+          <span class="ticker-item">•</span>
+          <span class="ticker-item">Flamengo confirma contratação de atacante europeu por R$ 80 milhões</span>
+          <span class="ticker-item">•</span>
+          <span class="ticker-item">Seleção Brasileira convoca 26 jogadores para amistosos de março</span>
+          <span class="ticker-item">•</span>
+          <span class="ticker-item">Copa do Brasil 2026: sorteio da fase de grupos acontece amanhã</span>
+          <span class="ticker-item">•</span>
+          <span class="ticker-item">Brasileirão 2026: Rodada 1 começa hoje com 10 jogos simultâneos</span>
+          <span class="ticker-item">•</span>
+          <span class="ticker-item">Flamengo confirma contratação de atacante europeu por R$ 80 milhões</span>
+          <span class="ticker-item">•</span>
+          <span class="ticker-item">Seleção Brasileira convoca 26 jogadores para amistosos de março</span>
+          <span class="ticker-item">•</span>
+          <span class="ticker-item">Copa do Brasil 2026: sorteio da fase de grupos acontece amanhã</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hero Card -->
+    <div class="hero-card" onclick="openArticle()">
+      <div style="position:absolute;inset:0;background:linear-gradient(135deg,#0D4FAF,#1A6FE8);display:flex;align-items:center;justify-content:center;font-size:80px;opacity:0.3;">⚽</div>
+      <div class="hero-overlay">
+        <div class="hero-category">🔥 Destaque</div>
+        <div class="hero-title">Brasileirão 2026 começa com jogos emocionantes na Rodada 1</div>
+        <div class="hero-meta">
+          <span class="hero-time">⏱ Há 15 minutos</span>
+          <span style="color:rgba(255,255,255,0.4)">•</span>
+          <span class="hero-time">📖 3 min de leitura</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ARENA PLAY BANNER -->
+    <div class="arena-banner">
+      <div class="arena-eyebrow">🎮 Parceiro Oficial Record News</div>
+      <div class="arena-title">Arena Play<br/><span>Fantasy Football</span></div>
+      <div class="arena-subtitle">Monte seu time dos sonhos e dispute com amigos em tempo real durante o Brasileirão 2026!</div>
+      <div class="arena-stats">
+        <div class="arena-stat">
+          <div class="arena-stat-value">12.4K</div>
+          <div class="arena-stat-label">Jogadores</div>
+        </div>
+        <div class="arena-stat">
+          <div class="arena-stat-value">R$50K</div>
+          <div class="arena-stat-label">Em Prêmios</div>
+        </div>
+        <div class="arena-stat">
+          <div class="arena-stat-value">Grátis</div>
+          <div class="arena-stat-label">Para Jogar</div>
+        </div>
+      </div>
+      <a href="https://8081-iiqzx2xzfhshs38cy65o7-596e00d6.us2.manus.computer" target="_blank" class="btn-arena">
+        <span class="btn-arena-icon">⚽</span>
+        Entrar no Game Agora
+        <span>→</span>
+      </a>
+    </div>
+
+    <!-- Latest News -->
+    <div class="section-header">
+      <div class="section-title">Últimas Notícias</div>
+      <div class="section-link">Ver todas →</div>
+    </div>
+    <div class="news-list">
+      <div class="news-card" onclick="openArticle()">
+        <div class="news-thumb">📰</div>
+        <div class="news-info">
+          <div class="news-cat">Política</div>
+          <div class="news-title">Governo anuncia pacote de medidas econômicas para o segundo semestre</div>
+          <div class="news-meta"><span class="news-time">Há 32 min</span></div>
+        </div>
+      </div>
+      <div class="news-card" onclick="openArticle()">
+        <div class="news-thumb">💰</div>
+        <div class="news-info">
+          <div class="news-cat">Economia</div>
+          <div class="news-title">Dólar cai para R$ 5,72 após dados positivos do mercado de trabalho</div>
+          <div class="news-meta"><span class="news-time">Há 1h</span></div>
+        </div>
+      </div>
+      <div class="news-card" onclick="openArticle()">
+        <div class="news-thumb">🌍</div>
+        <div class="news-info">
+          <div class="news-cat">Mundo</div>
+          <div class="news-title">Cúpula do G20 define novas metas climáticas para 2030</div>
+          <div class="news-meta"><span class="news-time">Há 2h</span></div>
+        </div>
+      </div>
+      <div class="news-card" onclick="openArticle()">
+        <div class="news-thumb">⚖️</div>
+        <div class="news-info">
+          <div class="news-cat">Justiça</div>
+          <div class="news-title">STF retoma julgamento de caso de repercussão nacional nesta semana</div>
+          <div class="news-meta"><span class="news-time">Há 3h</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SPORTS SCREEN ===== -->
+  <div class="screen" id="screen-sports">
+    <div class="chips-row">
+      <div class="chip active">Futebol</div>
+      <div class="chip">Basquete</div>
+      <div class="chip">Tênis</div>
+      <div class="chip">Fórmula 1</div>
+      <div class="chip">Vôlei</div>
+      <div class="chip">MMA</div>
+    </div>
+
+    <!-- Live Match -->
+    <div class="section-header">
+      <div class="section-title">🔴 Ao Vivo Agora</div>
+    </div>
+    <div class="match-banner">
+      <div class="match-round">Brasileirão Série A · Rodada 1 · 16:00</div>
+      <div class="match-teams">
+        <div class="match-team">
+          <div class="team-badge">🔵</div>
+          <div class="team-name">Bahia</div>
+        </div>
+        <div class="match-vs">
+          <div class="match-score">0 — 0</div>
+          <div class="match-status">● 34'</div>
+        </div>
+        <div class="match-team">
+          <div class="team-badge">🟢</div>
+          <div class="team-name">Chapecoense</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Arena CTA -->
+    <div class="arena-cta-float" onclick="goToArena()">
+      <div class="arena-cta-icon">⚽</div>
+      <div class="arena-cta-text">
+        <div class="arena-cta-label">🎮 Arena Play Fantasy Football</div>
+        <div class="arena-cta-title">Entrar no Game →</div>
+      </div>
+      <div class="arena-cta-arrow">▶</div>
+    </div>
+
+    <!-- More Matches -->
+    <div class="section-header">
+      <div class="section-title">Próximos Jogos</div>
+      <div class="section-link">Tabela completa →</div>
+    </div>
+    <div class="news-list">
+      <div class="news-card">
+        <div class="news-thumb" style="font-size:22px;flex-direction:column;gap:2px;">
+          <span>⚫</span><span style="font-size:10px;color:var(--rn-text3)">BOT</span>
+        </div>
+        <div class="news-info">
+          <div class="news-cat">Brasileirão · Rodada 1</div>
+          <div class="news-title">Botafogo vs Vitória</div>
+          <div class="news-meta">
+            <span class="news-time">🕓 16:00 · Qua, 25/02</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;padding-right:4px;">
+          <div style="background:var(--rn-card2);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;color:var(--rn-text3);">vs</div>
+        </div>
+      </div>
+      <div class="news-card">
+        <div class="news-thumb" style="font-size:22px;flex-direction:column;gap:2px;">
+          <span>🔴</span><span style="font-size:10px;color:var(--rn-text3)">FLA</span>
+        </div>
+        <div class="news-info">
+          <div class="news-cat">Brasileirão · Rodada 1</div>
+          <div class="news-title">Flamengo vs Mirassol</div>
+          <div class="news-meta">
+            <span class="news-time">🕓 16:00 · Qua, 25/02</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;padding-right:4px;">
+          <div style="background:var(--rn-card2);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;color:var(--rn-text3);">vs</div>
+        </div>
+      </div>
+      <div class="news-card">
+        <div class="news-thumb" style="font-size:22px;flex-direction:column;gap:2px;">
+          <span>🟢</span><span style="font-size:10px;color:var(--rn-text3)">PAL</span>
+        </div>
+        <div class="news-info">
+          <div class="news-cat">Brasileirão · Rodada 1</div>
+          <div class="news-title">Palmeiras vs Fluminense</div>
+          <div class="news-meta">
+            <span class="news-time">🕓 19:30 · Qua, 25/02</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;padding-right:4px;">
+          <div style="background:var(--rn-card2);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;color:var(--rn-text3);">vs</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sports News Grid -->
+    <div class="section-header">
+      <div class="section-title">Notícias Esportivas</div>
+      <div class="section-link">Ver mais →</div>
+    </div>
+    <div class="sports-grid">
+      <div class="sport-card" onclick="openArticle()">
+        <div class="sport-card-img">🏆</div>
+        <div class="sport-card-body">
+          <div class="sport-card-cat">Brasileirão</div>
+          <div class="sport-card-title">Danilo lidera artilharia com 4 gols na estreia</div>
+        </div>
+      </div>
+      <div class="sport-card" onclick="openArticle()">
+        <div class="sport-card-img">⚽</div>
+        <div class="sport-card-body">
+          <div class="sport-card-cat">Seleção</div>
+          <div class="sport-card-title">Brasil convoca 26 para amistosos de março</div>
+        </div>
+      </div>
+      <div class="sport-card" onclick="openArticle()">
+        <div class="sport-card-img">🥇</div>
+        <div class="sport-card-body">
+          <div class="sport-card-cat">Copa do Brasil</div>
+          <div class="sport-card-title">Sorteio dos grupos acontece amanhã às 14h</div>
+        </div>
+      </div>
+      <div class="sport-card" onclick="openArticle()">
+        <div class="sport-card-img">🎯</div>
+        <div class="sport-card-body">
+          <div class="sport-card-cat">Transferências</div>
+          <div class="sport-card-title">Flamengo fecha com atacante europeu por R$ 80mi</div>
+        </div>
+      </div>
+    </div>
+    <div style="height:16px;"></div>
+  </div>
+
+  <!-- ===== LIVE SCREEN ===== -->
+  <div class="screen" id="screen-live">
+    <div class="live-card">
+      <div class="live-player">
+        <div class="live-player-bg">
+          <img src="icon.png" class="live-logo-big" alt="RN" />
+        </div>
+        <div class="live-play-btn" onclick="playLive()">▶</div>
+      </div>
+      <div class="live-info">
+        <div class="live-now">
+          <div class="live-dot"></div>
+          <div class="live-program">Record News Ao Vivo</div>
+        </div>
+        <div class="live-time">Transmissão 24 horas · HD</div>
+      </div>
+      <div class="schedule-list">
+        <div class="schedule-item current">
+          <div class="schedule-time">16:00</div>
+          <div class="schedule-name">🔴 Jornal Record News (AO VIVO)</div>
+        </div>
+        <div class="schedule-item">
+          <div class="schedule-time">17:00</div>
+          <div class="schedule-name">Esporte Record</div>
+        </div>
+        <div class="schedule-item">
+          <div class="schedule-time">18:00</div>
+          <div class="schedule-name">Record News na Hora</div>
+        </div>
+        <div class="schedule-item">
+          <div class="schedule-time">19:00</div>
+          <div class="schedule-name">Debate Record</div>
+        </div>
+        <div class="schedule-item">
+          <div class="schedule-time">20:00</div>
+          <div class="schedule-name">Jornal da Record</div>
+        </div>
+        <div class="schedule-item">
+          <div class="schedule-time">21:00</div>
+          <div class="schedule-name">Esporte Record Noite</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Arena Banner in Live -->
+    <div class="arena-banner" style="margin-top:12px;">
+      <div class="arena-eyebrow">🎮 Enquanto assiste ao jogo</div>
+      <div class="arena-title">Jogue <span>Fantasy</span><br/>em Tempo Real!</div>
+      <div class="arena-subtitle">Acompanhe os jogos da Record News e pontue com seu time fantasy simultaneamente.</div>
+      <a href="https://8081-iiqzx2xzfhshs38cy65o7-596e00d6.us2.manus.computer" target="_blank" class="btn-arena">
+        <span class="btn-arena-icon">⚽</span>
+        Entrar no Game
+        <span>→</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- ===== POLITICS SCREEN ===== -->
+  <div class="screen" id="screen-politics">
+    <div class="section-header">
+      <div class="section-title">Política</div>
+    </div>
+    <div class="news-list">
+      <div class="news-card" onclick="openArticle()">
+        <div class="news-thumb">🏛️</div>
+        <div class="news-info">
+          <div class="news-cat">Governo Federal</div>
+          <div class="news-title">Governo anuncia pacote de medidas econômicas para o segundo semestre de 2026</div>
+          <div class="news-meta"><span class="news-time">Há 32 min</span></div>
+        </div>
+      </div>
+      <div class="news-card" onclick="openArticle()">
+        <div class="news-thumb">⚖️</div>
+        <div class="news-info">
+          <div class="news-cat">Congresso</div>
+          <div class="news-title">Câmara aprova projeto de lei sobre reforma tributária em segundo turno</div>
+          <div class="news-meta"><span class="news-time">Há 1h 20min</span></div>
+        </div>
+      </div>
+      <div class="news-card" onclick="openArticle()">
+        <div class="news-thumb">🗳️</div>
+        <div class="news-info">
+          <div class="news-cat">Eleições 2026</div>
+          <div class="news-title">Pesquisa eleitoral aponta empate técnico entre principais candidatos</div>
+          <div class="news-meta"><span class="news-time">Há 3h</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ECONOMY SCREEN ===== -->
+  <div class="screen" id="screen-economy">
+    <div class="section-header">
+      <div class="section-title">Economia</div>
+    </div>
+    <div class="news-list">
+      <div class="news-card" onclick="openArticle()">
+        <div class="news-thumb">💵</div>
+        <div class="news-info">
+          <div class="news-cat">Câmbio</div>
+          <div class="news-title">Dólar cai para R$ 5,72 após dados positivos do mercado de trabalho americano</div>
+          <div class="news-meta"><span class="news-time">Há 45 min</span></div>
+        </div>
+      </div>
+      <div class="news-card" onclick="openArticle()">
+        <div class="news-thumb">📈</div>
+        <div class="news-info">
+          <div class="news-cat">Bolsa de Valores</div>
+          <div class="news-title">Ibovespa sobe 1,2% e atinge maior nível do ano impulsionado por commodities</div>
+          <div class="news-meta"><span class="news-time">Há 2h</span></div>
+        </div>
+      </div>
+      <div class="news-card" onclick="openArticle()">
+        <div class="news-thumb">🏦</div>
+        <div class="news-info">
+          <div class="news-cat">Banco Central</div>
+          <div class="news-title">Copom mantém Selic em 13,75% ao ano na reunião desta semana</div>
+          <div class="news-meta"><span class="news-time">Há 4h</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== WORLD SCREEN ===== -->
+  <div class="screen" id="screen-world">
+    <div class="section-header">
+      <div class="section-title">Mundo</div>
+    </div>
+    <div class="news-list">
+      <div class="news-card" onclick="openArticle()">
+        <div class="news-thumb">🌍</div>
+        <div class="news-info">
+          <div class="news-cat">Clima</div>
+          <div class="news-title">Cúpula do G20 define novas metas climáticas ambiciosas para 2030</div>
+          <div class="news-meta"><span class="news-time">Há 1h</span></div>
+        </div>
+      </div>
+      <div class="news-card" onclick="openArticle()">
+        <div class="news-thumb">🇺🇸</div>
+        <div class="news-info">
+          <div class="news-cat">Estados Unidos</div>
+          <div class="news-title">Fed sinaliza possível corte de juros no segundo trimestre de 2026</div>
+          <div class="news-meta"><span class="news-time">Há 2h 30min</span></div>
+        </div>
+      </div>
+      <div class="news-card" onclick="openArticle()">
+        <div class="news-thumb">🇪🇺</div>
+        <div class="news-info">
+          <div class="news-cat">Europa</div>
+          <div class="news-title">União Europeia aprova novo pacote de sanções econômicas</div>
+          <div class="news-meta"><span class="news-time">Há 5h</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <div class="nav-item active" id="nav-home" onclick="switchNav('home')">
+      <div class="nav-icon">🏠</div>
+      <div class="nav-label">Início</div>
+    </div>
+    <div class="nav-item" id="nav-sports" onclick="switchNav('sports')">
+      <div class="nav-icon">⚽</div>
+      <div class="nav-label">Esportes</div>
+    </div>
+    <div class="nav-item" id="nav-live" onclick="switchNav('live')">
+      <div class="nav-icon">📺</div>
+      <div class="nav-label">Ao Vivo</div>
+    </div>
+    <div class="nav-item" id="nav-search" onclick="switchNav('search')">
+      <div class="nav-icon">🔍</div>
+      <div class="nav-label">Buscar</div>
+    </div>
+    <div class="nav-item" id="nav-profile" onclick="switchNav('profile')">
+      <div class="nav-icon">👤</div>
+      <div class="nav-label">Perfil</div>
+    </div>
+  </nav>
+
+  <!-- INSTALL BANNER -->
+  <div id="install-banner">
+    <div class="install-icon">📲</div>
+    <div class="install-text">
+      <div class="install-title">Instalar Record News</div>
+      <div class="install-sub">Acesso rápido na tela inicial</div>
+    </div>
+    <button class="btn-install" id="btn-install-confirm">Instalar</button>
+    <button class="btn-close-banner" onclick="closeBanner()">✕</button>
+  </div>
+
+</div>
+
+<script>
+  // ===== TAB SWITCHING =====
+  const tabScreenMap = {
+    'home': 'screen-home',
+    'sports': 'screen-sports',
+    'live': 'screen-live',
+    'politics': 'screen-politics',
+    'economy': 'screen-economy',
+    'world': 'screen-world',
+  };
+
+  function switchTab(name, el) {
+    // Update tabs
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    // Show screen
+    const screenId = tabScreenMap[name];
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    if (screenId) {
+      document.getElementById(screenId).classList.add('active');
+    }
+    // Update bottom nav if applicable
+    const navMap = { home: 'nav-home', sports: 'nav-sports', live: 'nav-live' };
+    if (navMap[name]) {
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById(navMap[name]).classList.add('active');
+    }
+  }
+
+  // ===== BOTTOM NAV =====
+  function switchNav(name) {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('nav-' + name)?.classList.add('active');
+
+    const tabMap = { home: 0, sports: 1, live: 2 };
+    if (tabMap[name] !== undefined) {
+      const tabs = document.querySelectorAll('.tab');
+      tabs.forEach(t => t.classList.remove('active'));
+      tabs[tabMap[name]].classList.add('active');
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      const screenId = tabScreenMap[name];
+      if (screenId) document.getElementById(screenId).classList.add('active');
+    }
+
+    if (name === 'search') {
+      showSearch();
+    }
+    if (name === 'profile') {
+      showProfile();
+    }
+  }
+
+  // ===== ARENA PLAY =====
+  function goToArena() {
+    window.open('https://8081-iiqzx2xzfhshs38cy65o7-596e00d6.us2.manus.computer', '_blank');
+  }
+
+  // ===== ARTICLE =====
+  function openArticle() {
+    alert('📰 Artigo completo\n\nEm produção: integração com CMS da Record News para exibir conteúdo real dos repórteres.');
+  }
+
+  // ===== SEARCH =====
+  function showSearch() {
+    const q = prompt('🔍 Buscar notícias:');
+    if (q) alert('Buscando por: "' + q + '"\n\nEm produção: integração com motor de busca da Record News.');
+  }
+
+  // ===== NOTIFICATIONS =====
+  function showNotif() {
+    if ('Notification' in window) {
+      Notification.requestPermission().then(p => {
+        if (p === 'granted') {
+          new Notification('Record News', {
+            body: '🔴 Notificações ativadas! Você receberá alertas de últimas notícias.',
+            icon: '/icon.png'
+          });
+        }
+      });
+    }
+  }
+
+  // ===== LIVE TV =====
+  function playLive() {
+    alert('📺 Ao Vivo\n\nEm produção: player de streaming integrado com o sinal ao vivo da Record News.');
+  }
+
+  // ===== PROFILE =====
+  function showProfile() {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    // Show profile inline
+    let profileScreen = document.getElementById('screen-profile');
+    if (!profileScreen) {
+      profileScreen = document.createElement('div');
+      profileScreen.id = 'screen-profile';
+      profileScreen.className = 'screen active';
+      profileScreen.innerHTML = `
+        <div class="profile-header">
+          <div class="avatar">👤</div>
+          <div class="profile-info">
+            <div class="profile-name">Percy Alves</div>
+            <div class="profile-sub">Assinante Record News Premium</div>
+            <div class="profile-badge">⭐ PREMIUM</div>
+          </div>
+        </div>
+        <div class="menu-section">
+          <div class="menu-section-title">Minha Conta</div>
+          <div class="menu-list">
+            <div class="menu-item" onclick="goToArena()">
+              <div class="menu-item-icon">⚽</div>
+              <div class="menu-item-text">
+                <div class="menu-item-title">Arena Play Fantasy</div>
+                <div class="menu-item-sub">Meu time · 584 pts · #42</div>
+              </div>
+              <div class="menu-item-badge">JOGO</div>
+            </div>
+            <div class="menu-item">
+              <div class="menu-item-icon">🔖</div>
+              <div class="menu-item-text">
+                <div class="menu-item-title">Notícias Salvas</div>
+                <div class="menu-item-sub">12 artigos salvos</div>
+              </div>
+              <div class="menu-item-arrow">›</div>
+            </div>
+            <div class="menu-item">
+              <div class="menu-item-icon">🔔</div>
+              <div class="menu-item-text">
+                <div class="menu-item-title">Notificações</div>
+                <div class="menu-item-sub">Alertas de últimas notícias</div>
+              </div>
+              <div class="menu-item-arrow">›</div>
+            </div>
+          </div>
+        </div>
+        <div class="menu-section">
+          <div class="menu-section-title">Preferências</div>
+          <div class="menu-list">
+            <div class="menu-item">
+              <div class="menu-item-icon">🎨</div>
+              <div class="menu-item-text">
+                <div class="menu-item-title">Temas de Interesse</div>
+                <div class="menu-item-sub">Esportes, Política, Economia</div>
+              </div>
+              <div class="menu-item-arrow">›</div>
+            </div>
+            <div class="menu-item">
+              <div class="menu-item-icon">📱</div>
+              <div class="menu-item-text">
+                <div class="menu-item-title">Instalar App</div>
+                <div class="menu-item-sub">Adicionar à tela inicial</div>
+              </div>
+              <div class="menu-item-arrow">›</div>
+            </div>
+          </div>
+        </div>
+        <div class="menu-section">
+          <div class="menu-section-title">Record News</div>
+          <div class="menu-list">
+            <div class="menu-item">
+              <div class="menu-item-icon">📺</div>
+              <div class="menu-item-text">
+                <div class="menu-item-title">Sobre a Record News</div>
+                <div class="menu-item-sub">O canal de notícias 24h do Brasil</div>
+              </div>
+              <div class="menu-item-arrow">›</div>
+            </div>
+            <div class="menu-item">
+              <div class="menu-item-icon">📞</div>
+              <div class="menu-item-text">
+                <div class="menu-item-title">Fale Conosco</div>
+                <div class="menu-item-sub">Suporte e redação</div>
+              </div>
+              <div class="menu-item-arrow">›</div>
+            </div>
+          </div>
+        </div>
+        <div style="height:16px;"></div>
+      `;
+      document.getElementById('app').insertBefore(profileScreen, document.querySelector('.bottom-nav'));
+    } else {
+      profileScreen.classList.add('active');
+    }
+  }
+
+  // ===== PWA INSTALL =====
+  let deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    const banner = document.getElementById('install-banner');
+    banner.classList.add('show');
+  });
+
+  document.getElementById('btn-install-confirm').addEventListener('click', async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      closeBanner();
+    }
+  });
+
+  function closeBanner() {
+    document.getElementById('install-banner').classList.remove('show');
+  }
+
+  // ===== SERVICE WORKER =====
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  }
+
+  // ===== UPDATE TIMES =====
+  function updateTimes() {
+    const now = new Date();
+    const items = document.querySelectorAll('.news-time');
+    // Dynamic time display is handled by static content for demo
+  }
+</script>
+</body>
+</html>
